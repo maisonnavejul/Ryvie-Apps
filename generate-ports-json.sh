@@ -19,8 +19,35 @@ OUTPUT_FILE="ports.json"
 
 echo "🔌 Generating ${OUTPUT_FILE} from */docker-compose.yml..."
 
-# Initialize empty JSON object
-echo "{}" > "$OUTPUT_FILE"
+# Initialize with hardcoded ports
+cat > "$OUTPUT_FILE" << 'EOF'
+{
+  "rdrive": {
+    "3010": 80,
+    "4000": 4000,
+    "5433": 5432,
+    "5672": 5672,
+    "8090": 80,
+    "8443": 443,
+    "9229": 9229,
+    "15672": 15672,
+    "27017": 27017
+  },
+  "rpictures": {
+    "2283": 2283,
+    "3003": 3003,
+    "5432": 5432,
+    "9090": 9090
+  },
+  "rtransfer": {
+    "3011": 3000
+  },
+  "rdrop": {
+    "443": 443,
+    "8080": 80
+  }
+}
+EOF
 
 # Loop over all docker-compose.yml files
 for compose_file in */docker-compose.yml; do
