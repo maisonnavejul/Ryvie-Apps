@@ -32,7 +32,7 @@ for compose_file in */docker-compose.yml; do
   echo "🔹 Processing app: $app_dir"
 
   # Extract ports using regex (format "host:container" with optional quotes)
-  ports_found=$(grep -oP '- ["\']?\K\d+:\d+(?=["\']?)' "$compose_file" 2>/dev/null || true)
+  ports_found=$(grep -oP '- ["\x27]?\K\d+:\d+(?=["\x27]?)' "$compose_file" 2>/dev/null || true)
   
   if [ -z "$ports_found" ]; then
     echo "⚠️ No ports found in $app_dir"
@@ -42,12 +42,12 @@ for compose_file in */docker-compose.yml; do
   # Build JSON object for ports
   ports_object="{}"
   while IFS=: read -r host_port container_port; do
-    ports_object=$(echo "$ports_object" | jq --arg hp "$host_port" --argjson cp "$container_port" '. + {($hp): $cp}')
+    ports_object=$(echo "$ports_object" | jq --arg hp "$host_port" --argjson cp "$container_port" '.[$hp] = $cp')
   done <<< "$ports_found"
 
   # Add app entry to main JSON
   tmp=$(mktemp)
-  jq --arg app "$app_dir" --argjson ports "$ports_object" '. + {($app): $ports}' "$OUTPUT_FILE" > "$tmp" && mv "$tmp" "$OUTPUT_FILE"
+  jq --arg app "$app_dir" --argjson ports "$ports_object" '.[$app] = $ports' "$OUTPUT_FILE" > "$tmp" && mv "$tmp" "$OUTPUT_FILE"
 done
 
 echo "✅ ports.json successfully generated!"
