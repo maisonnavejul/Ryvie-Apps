@@ -41,21 +41,31 @@ jobs:
       - name: Generate ports.json
         run: bash ./generate-ports-json.sh
 
-      # 5️⃣ Commit and push apps.json and ports.json if changed
+      # 5️⃣ Check if files changed and commit
       - name: Commit apps.json and ports.json if changed
+        id: commit
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github-actions"
           git add apps.json ports.json
-          git diff --cached --quiet || git commit -m "Update apps.json and ports.json"
-          git push --force origin HEAD:${{ github.ref }}
+          if git diff --cached --quiet; then
+            echo "✅ No changes detected in apps.json or ports.json"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "📝 Changes detected, committing..."
+            git commit -m "Update apps.json and ports.json"
+            git push --force origin HEAD:${{ github.ref }}
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
 
       # 6️⃣ Debug tags to verify visibility
       - name: List existing tags
+        if: steps.commit.outputs.changed == 'true'
         run: git tag -l
 
       # 7️⃣ Determine next version based on existing tags
       - name: Determine next version
+        if: steps.commit.outputs.changed == 'true'
         id: version
         run: |
           latest=$(git tag | sort -V | tail -n 1)
@@ -64,12 +74,13 @@ jobs:
           fi
           base=${latest%.*}
           patch=${latest##*.}
-          next="${base}.$((patch + 1))"
+          next="${base}.$((patch + 1)}"
           echo "next_version=$next" >> $GITHUB_OUTPUT
           echo "📦 Next version: $next"
 
       # 8️⃣ Create and push new tag (skip if already exists)
       - name: Create and push Git tag
+        if: steps.commit.outputs.changed == 'true'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github-actions"
@@ -83,6 +94,7 @@ jobs:
 
       # 9️⃣ Create GitHub release with apps.json and ports.json
       - name: Create GitHub Release
+        if: steps.commit.outputs.changed == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.next_version }}
