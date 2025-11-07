@@ -11,7 +11,6 @@ set -euo pipefail
 # Check dependencies
 # ------------------------------
 command -v jq >/dev/null 2>&1 || { echo "❌ jq is not installed. Exiting."; exit 1; }
-command -v yq >/dev/null 2>&1 || { echo "❌ yq is not installed. Exiting."; exit 1; }
 
 # ------------------------------
 # Variables
@@ -32,32 +31,19 @@ for compose_file in */docker-compose.yml; do
   app_dir=$(basename "$(dirname "$compose_file")")
   echo "🔹 Processing app: $app_dir"
 
-  # Extract all ports from all services and flatten them
-  ports_json=$(yq -o=json '.services | to_entries | map(select(.value.ports != null) | .value.ports) | flatten | map(select(. != null))' "$compose_file")
+  # Extract ports using regex (format "host:container" with optional quotes)
+  ports_found=$(grep -oP '- ["\']?\K\d+:\d+(?=["\']?)' "$compose_file" 2>/dev/null || true)
   
-  # Check if any ports were found
-  if [ "$ports_json" = "[]" ] || [ "$ports_json" = "null" ]; then
+  if [ -z "$ports_found" ]; then
     echo "⚠️ No ports found in $app_dir"
     continue
   fi
 
-  # Convert ports array to object with host:container mapping
-  ports_object=$(echo "$ports_json" | jq -r 'map(
-    if type == "string" then
-      . | split(":") | 
-      if length == 2 then
-        {(.[0]): (.[1] | tonumber? // .)}
-      elif length == 1 then
-        {(.[0]): (.[0] | tonumber? // .)}
-      else
-        empty
-      end
-    elif type == "object" and .published and .target then
-      {(.published | tostring): (.target | tonumber? // .target)}
-    else
-      empty
-    end
-  ) | add // {}')
+  # Build JSON object for ports
+  ports_object="{}"
+  while IFS=: read -r host_port container_port; do
+    ports_object=$(echo "$ports_object" | jq --arg hp "$host_port" --argjson cp "$container_port" '. + {($hp): $cp}')
+  done <<< "$ports_found"
 
   # Add app entry to main JSON
   tmp=$(mktemp)
