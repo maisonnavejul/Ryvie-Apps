@@ -1,0 +1,13 @@
+manifestVersion: 1
+id: bitwarden
+category: security
+name: bitwarden
+version: "v.2025.11.0"
+port:
+description: >-
+  Bitwarden is an open-source password management solution that allows users to securely store, manage, and share their passwords and sensitive information across multiple devices. It offers features such as password generation, secure notes, and two-factor authentication to enhance online security.
+gallery:
+  - icon.png
+  - image1.png
+  - image2.png
+  - image3.png
