@@ -2,7 +2,7 @@ manifestVersion: 1
 id: webcheck
 name: WebCheck
 tagline: An all-in-one Open Source Intelligence tool for analyzing any website
-category: networking
+category: security
 version: "1.0.0"
 port: 3093
 description: >-
