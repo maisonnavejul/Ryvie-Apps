@@ -3,7 +3,7 @@ version: '3.9'
 services:
   web:
     image: ghcr.io/toeverything/affine:0.25.1
-    container_name: affine_web
+    container_name: app-affine-web
     restart: unless-stopped
     ports:
       - "3015:3010"
@@ -27,7 +27,7 @@ services:
 
   migration:
     image: ghcr.io/toeverything/affine:0.25.1
-    container_name: affine_migration
+    container_name: app-affine-migration
     restart: "no"
     command: ["sh", "-c", "node ./scripts/self-host-predeploy"]
     environment:
@@ -48,7 +48,7 @@ services:
 
   redis:
     image: redis:7.2.4
-    container_name: affine_redis
+    container_name: app-affine-redis
     restart: unless-stopped
     volumes:
       - ./data/storage/redis:/data
@@ -62,7 +62,7 @@ services:
 
   db:
     image: postgres:16.2
-    container_name: affine_database
+    container_name: app-affine-database
     restart: unless-stopped
     environment:
       POSTGRES_USER: affine
