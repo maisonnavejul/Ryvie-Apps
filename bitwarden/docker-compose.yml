@@ -8,6 +8,8 @@ services:
       - path: ../../dev/.env
         required: false
     restart: unless-stopped
+    networks:
+      - bitwarden-network
 
   bitwarden_mssql:
     container_name: app-bitwarden-mssql
@@ -25,13 +27,23 @@ services:
       - ../../util/Migrator:/mnt/migrator/
       - ../../dev/helpers/mssql:/mnt/helpers
       - ../../dev/.data/mssql:/mnt/data
-    network_mode: service:bitwarden_server
+    ports:
+      - "1433:1433"
+    networks:
+      - bitwarden-network
 
   bitwarden_mail:
     container_name: app-bitwarden-mail
     image: sj26/mailcatcher:latest
     restart: unless-stopped
-    network_mode: service:bitwarden_server
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+    networks:
+      - bitwarden-network
+
+networks:
+  bitwarden-network:
     
 volumes:
   mssql_dev_data:
