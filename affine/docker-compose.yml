@@ -83,3 +83,4 @@ services:
 
 networks:
   affine-network:
+    driver: bridge
