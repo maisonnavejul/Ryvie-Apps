@@ -30,13 +30,3 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
-  caddy:
-    image: caddy:latest
-    container_name: app-docuseal-caddy
-    command: caddy reverse-proxy --from ryvietest.local --to app:3000
-    ports:
-      - "80:80"
-      - "445:443"
-      - "445:443/udp"
-    restart: unless-stopped
